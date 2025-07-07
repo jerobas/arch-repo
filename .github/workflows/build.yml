@@ -36,7 +36,7 @@ jobs:
       - name: Build packages
         run: |
           chmod +x /tmp/arch-repo/.github/scripts/build.sh
-          sudo -u builduser /tmp/arch-repo/.github/scripts/build.sh "${{ inputs.path }}"
+          sudo -u builduser /tmp/arch-repo/.github/scripts/build.sh "${{ inputs.path }}" "${{ inputs.caller_repo }}"
 
       - name: List output files
         id: list
