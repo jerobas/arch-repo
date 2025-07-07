@@ -3,6 +3,10 @@ name: Build Arch packages
 on:
   workflow_call:
     inputs:
+      caller_repo:
+        description: "Repository that triggered this reusable workflow"
+        required: true
+        type: string
       path:
         required: false
         type: string
@@ -42,4 +46,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist
+          path: /temp/dist

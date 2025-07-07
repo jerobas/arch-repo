@@ -1,7 +1,12 @@
 #!/bin/bash
 set -e
 build_path="$1"
-output_path="$GITHUB_WORKSPACE/dist"
+caller_repo="$2"
+output_path="/tmp/dist"
+
+git clone "https://github.com/$caller_repo" repo
+cd repo
+
 mkdir -p "$output_path"
 
 for dir in $build_path/*; do
