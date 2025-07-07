@@ -18,6 +18,9 @@ jobs:
       packages: ${{ steps.list.outputs.packages }}
 
     steps:
+      - name: Checkout reusable repo
+        uses: actions/checkout@v4
+
       - name: Setup container
         run: |
           chmod +x .github/scripts/setup.sh
