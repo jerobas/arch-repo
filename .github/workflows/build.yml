@@ -20,6 +20,7 @@ jobs:
     steps:
       - name: Clone reusable scripts
         run: |
+          pacman -S git
           git clone https://github.com/jerobas/arch-repo /tmp/arch-repo
 
       - name: Setup container
