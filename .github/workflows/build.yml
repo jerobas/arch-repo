@@ -18,18 +18,19 @@ jobs:
       packages: ${{ steps.list.outputs.packages }}
 
     steps:
-      - name: Checkout reusable repo
-        uses: actions/checkout@v4
+      - name: Clone reusable scripts
+        run: |
+          git clone https://github.com/jerobas/arch-repo /tmp/arch-repo
 
       - name: Setup container
         run: |
-          chmod +x .github/scripts/setup.sh
-          .github/scripts/setup.sh
+          chmod +x /tmp/arch-repo/.github/scripts/setup.sh
+          /tmp/arch-repo/.github/scripts/setup.sh
 
       - name: Build packages
         run: |
-          chmod +x .github/scripts/build.sh
-          sudo -u builduser .github/scripts/build.sh "${{ inputs.path }}"
+          chmod +x /tmp/arch-repo/.github/scripts/build.sh
+          sudo -u builduser /tmp/arch-repo/.github/scripts/build.sh "${{ inputs.path }}"
 
       - name: List output files
         id: list
