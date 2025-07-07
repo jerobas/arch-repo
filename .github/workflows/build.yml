@@ -31,3 +31,9 @@ jobs:
       - name: List output files
         id: list
         run: echo "packages=$(ls dist | paste -sd ',' -)" >> $GITHUB_OUTPUT
+
+      - name: Upload packages as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
