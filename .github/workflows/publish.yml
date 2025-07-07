@@ -12,7 +12,7 @@ on:
         required: true
         type: string
     secrets:
-      GH_PAT:
+      GH_TOKEN:
         required: true
 
 jobs:
@@ -24,61 +24,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: jerobas/arch-repo
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GH_TOKEN }}
           path: repo
 
       - name: Create x86_64 directory if missing
         run: mkdir -p repo/x86_64
 
-      - name: Download .pkg.tar.zst from release
+      - name: Download packages from release
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          mkdir pkg
-          gh release download "${{ inputs.release_tag }}" \
-            --repo "${{ inputs.release_repo }}" \
-            --pattern "*.pkg.tar.zst" \
-            --dir pkg
+          chmod +x .github/scripts/download-pkgs.sh
+          .github/scripts/download-pkgs.sh "${{ inputs.release_repo }}" "${{ inputs.release_tag }}"
 
-          count=$(ls pkg/*.pkg.tar.zst | wc -l)
-          if [ "$count" -eq 0 ]; then
-            echo "❌ No .pkg.tar.zst file found in release."
-            exit 1
-          fi
-
-      - name: Update repository inside Arch container
+      - name: Update Arch repo inside container
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/repo:/repo \
-            -v ${{ github.workspace }}/pkg:/pkg \
-            archlinux bash -c "
-              set -e
-              pacman -Sy --noconfirm pacman-contrib >/dev/null
-
-              cd /repo/x86_64
-
-              for file in /pkg/*.pkg.tar.zst; do
-                pkgfile=\$(basename \"\$file\")
-                nameverarch=\${pkgfile%.pkg.tar.zst}
-                # Remove -X.Y.Z-N-ARCH at the end
-                pkgname=\$(echo \"\$nameverarch\" | sed -E 's/-[0-9]+(\.[0-9]+)*-[0-9]+-[^-]+$//')
-
-                echo \"🔎 Removing previous versions of \$pkgname from DB...\"
-                repo-remove myrepo.db.tar.gz \"\$pkgname\" || true
-
-                echo \"📦 Copying \$pkgfile into repository...\"
-                cp \"\$file\" .
-              done
-
-              echo \"📚 Rebuilding repo database...\"
-              repo-add myrepo.db.tar.gz *.pkg.tar.zst
-            "
+          chmod +x .github/scripts/update-repo.sh
+          .github/scripts/update-repo.sh
 
       - name: Commit and push updated repo
         run: |
-          cd repo
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "Update repo: ${{ inputs.release_repo }}@${{ inputs.release_tag }}" || echo "No changes to commit"
-          git push
+          chmod +x .github/scripts/push-updates.sh
+          .github/scripts/push-updates.sh "${{ inputs.release_repo }}" "${{ inputs.release_tag }}"
