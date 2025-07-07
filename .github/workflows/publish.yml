@@ -34,15 +34,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          chmod +x .github/scripts/download-pkgs.sh
-          .github/scripts/download-pkgs.sh "${{ inputs.release_repo }}" "${{ inputs.release_tag }}"
+          chmod +x repo/.github/scripts/download-pkgs.sh
+          repo/.github/scripts/download-pkgs.sh "${{ inputs.release_repo }}" "${{ inputs.release_tag }}"
 
       - name: Update Arch repo inside container
         run: |
-          chmod +x .github/scripts/update-repo.sh
-          .github/scripts/update-repo.sh
+          chmod +x repo/.github/scripts/update-repo.sh
+          repo/.github/scripts/update-repo.sh
 
       - name: Commit and push updated repo
         run: |
-          chmod +x .github/scripts/push-updates.sh
-          .github/scripts/push-updates.sh "${{ inputs.release_repo }}" "${{ inputs.release_tag }}"
+          chmod +x repo/.github/scripts/push-updates.sh
+          repo/.github/scripts/push-updates.sh "${{ inputs.release_repo }}" "${{ inputs.release_tag }}"
