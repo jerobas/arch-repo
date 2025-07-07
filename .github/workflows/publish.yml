@@ -12,7 +12,7 @@ on:
         required: true
         type: string
     secrets:
-      GH_TOKEN:
+      GH_PAT:
         required: true
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: jerobas/arch-repo
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           path: repo
 
       - name: Create x86_64 directory if missing
@@ -32,7 +32,7 @@ jobs:
 
       - name: Download .pkg.tar.zst from release
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           mkdir pkg
           gh release download "${{ inputs.release_tag }}" \
