@@ -1,0 +1,75 @@
+name: Publish to Central Arch Repo
+
+on:
+  workflow_call:
+    inputs:
+      release_repo:
+        description: "The GitHub repository with the release"
+        required: true
+        type: string
+      release_tag:
+        description: "The release tag (e.g. v1.0)"
+        required: true
+        type: string
+    secrets:
+      GH_PAT:
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout central repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          path: repo
+
+      - name: Create x86_64 directory if missing
+        run: mkdir -p repo/x86_64
+
+      - name: Download .pkg.tar.zst from release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          mkdir pkg
+          gh release download "${{ inputs.release_tag }}" \
+            --repo "${{ inputs.release_repo }}" \
+            --pattern "*.pkg.tar.zst" \
+            --dir pkg
+
+          count=$(ls pkg/*.pkg.tar.zst | wc -l)
+          if [ "$count" -eq 0 ]; then
+            echo "❌ No .pkg.tar.zst file found in release."
+            exit 1
+          fi
+
+      - name: Remove old versions of the package
+        run: |
+          cd repo/x86_64
+          for file in ../../pkg/*.pkg.tar.zst; do
+            pkgfile=$(basename "$file")
+            # Get pkgname without version
+            nameverarch="${pkgfile%.pkg.tar.zst}"        # foo-1.0-1-x86_64
+            pkgname=$(echo "$nameverarch" | sed -E 's/-[0-9]+(\.[0-9]+)*-[0-9]+-[^-]+$//')
+            echo "🔎 Removing previous versions of $pkgname"
+            repo-remove jerobas.db.tar.gz "$pkgname" || true
+          done
+
+      - name: Copy package into repo
+        run: cp pkg/*.pkg.tar.zst repo/x86_64/
+
+      - name: Rebuild repo database
+        run: |
+          cd repo/x86_64
+          repo-add jerobas.db.tar.gz *.pkg.tar.zst
+
+      - name: Commit and push updated repo
+        run: |
+          cd repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Update repo: ${{ inputs.release_repo }}@${{ inputs.release_tag }}" || echo "No changes to commit"
+          git push
