@@ -12,7 +12,7 @@ on:
         required: true
         type: string
     secrets:
-      GH_PAT:
+      GH_TOKEN:
         required: true
 
 jobs:
@@ -23,6 +23,7 @@ jobs:
       - name: Checkout central repo
         uses: actions/checkout@v4
         with:
+          repository: jerobas/arch-repo
           token: ${{ secrets.GH_TOKEN }}
           path: repo
 
