@@ -30,6 +30,9 @@ for dir in $build_path/*; do
     fi
   fi
 
+  deps=$(source PKGBUILD && echo "${depends[@]}")
+  sudo pacman -S --noconfirm --asdeps ${deps}
+
   case "$target" in
     aur)
       makepkg --source --noconfirm
